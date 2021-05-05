@@ -8,6 +8,7 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from src.constants.consts import TARGET, DATA
 from src.constants.enums import EOneBatchType
 
 
@@ -79,8 +80,8 @@ class TrainOneEpoch(object):
         for batch in tqdm(
             self.dataloader, total=len(self.dataloader), desc="training..."
         ):
-            data = batch["data"].to(self.device)
-            target = batch["target"].to(self.device)
+            data = batch[DATA].to(self.device)
+            target = batch[TARGET].to(self.device)
 
             loss = self.one_batch_train(data, target)
             loss_hist.append(loss.item())

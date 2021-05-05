@@ -5,3 +5,6 @@ PAD = '<pad>'
 UNKNOWN = '<unk>'
 
 RANDOM_SEED = 42
+
+TARGET = "target"
+DATA = "data"

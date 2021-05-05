@@ -1,3 +1,4 @@
+import logging
 from collections import Callable
 from typing import Optional, List, Tuple
 
@@ -24,7 +25,7 @@ from src.models.utils.train_classes import (
     make_one_epoch_runner,
 )
 from src.utils.dataset_utils import make_text_dataloader
-
+logger = logging.getLogger(__file__)
 
 def train_cycle(
     model: nn.Module,
@@ -46,7 +47,7 @@ def train_cycle(
         message = (
             f"Epoch #{epoch}: train loss: {train_loss:.5f}, val loss: {val_loss:.5f}"
         )
-        print(message)
+        logger.info(message)
         if lr_scheduler:
             lr_scheduler.step()
         if val_loss < best_val_loss:
