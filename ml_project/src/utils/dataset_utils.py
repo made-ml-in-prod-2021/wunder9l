@@ -1,4 +1,5 @@
 import collections
+from collections import Callable
 from typing import List
 import numpy as np
 import torch
@@ -22,9 +23,12 @@ class VocabTransform(object):
         return [self.vocab[token] for token in list_of_tokens]
 
 
-def collate_batch(batch, padding_value):
-    label_list, text_list = batch[:, 0], batch[:, 1]
-    return torch.tensor(label_list), pad_sequence(text_list, padding_value=padding_value)
+def collate_batch(padding_value: float) -> Callable:
+    def collate_fn(batch: List):
+        label_list, text_list = batch[:, 0], batch[:, 1]
+        return torch.tensor(label_list), pad_sequence(text_list, padding_value=padding_value)
+
+    return collate_fn(padding_value)
 
 
 def batch_sampler(dataset, batch_size, pool_per_batch=100):
@@ -45,11 +49,11 @@ def batch_sampler(dataset, batch_size, pool_per_batch=100):
 
 
 
-def make_dataloader(dataset: Dataset, batch_size: int):
+def make_text_dataloader(dataset: Dataset, batch_size: int, padding_value: float):
     bucket_dataloader = DataLoader(
         dataset,
         batch_size=batch_size,
         batch_sampler=batch_sampler(dataset, batch_size),
-        collate_fn=collate_batch,
+        collate_fn=collate_batch(padding_value),
     )
     return bucket_dataloader
