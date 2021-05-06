@@ -5,6 +5,7 @@ from typing import Optional, List, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+from hydra.utils import to_absolute_path
 
 from src.config.train.args import TrainArgs
 from src.constants.consts import PAD
@@ -65,7 +66,7 @@ def train_cycle(
 @time_it("main_train_model, duration", logger.info)
 def main_train_model(args: TrainArgs):
     train_dataset, val_dataset, vocab = read_datasets(
-        args.dataset_filename,
+        to_absolute_path(args.dataset_filename),
         args.test_size,
         args.tokenizer_name,
         args.pretrained_vectors,

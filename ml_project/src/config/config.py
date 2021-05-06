@@ -26,7 +26,5 @@ class Config:
 
 
 cs = ConfigStore.instance()
-# cs.store(group="db", name="mysql", node=MySQLConfig)
-# cs.store(group="db", name="postgresql", node=PostGreSQLConfig)
 cs.store(name="config", node=Config)
 register_train_config()

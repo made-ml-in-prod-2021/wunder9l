@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
 
-import click
 import logging
 from pathlib import Path
 import pandas as pd
@@ -81,9 +80,6 @@ def make_datasets(labels, texts, test_size, pretrained_vectors, tokenizer_name):
     )
 
 @time_it("prepare_data, duration", logger.info)
-@click.command()
-@click.argument("input_filepath", type=click.Path(exists=True))
-@click.argument("output_filepath", type=click.Path())
 def prepare_data(input_filepath, output_filepath):
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).

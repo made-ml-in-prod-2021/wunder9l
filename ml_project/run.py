@@ -1,7 +1,9 @@
 import logging
+import os
 import time
 
 import hydra
+from hydra.utils import get_original_cwd, to_absolute_path
 from omegaconf import OmegaConf
 
 from src.config.config import Config
@@ -18,16 +20,18 @@ logger = logging.getLogger(__file__)
 )
 def my_app(cfg: Config) -> None:
     print(OmegaConf.to_yaml(cfg))
+    working_dir = get_original_cwd()
+    print(f"Orig working directory    : {working_dir}")
+    print(f"Current working directory : {os.getcwd()}")
     if EProgramMode.PrepareData in cfg.mode:
         logger.info(f"STAGE: PrepareData")
-        start = time.time()
-        prepare_data(cfg.prepare_data.input_file, cfg.train.dataset_filename)
-        logger.info(f"STAGE: PrepareData finished in {time.time() - start}")
+        prepare_data(
+            to_absolute_path(cfg.prepare_data.input_file),
+            to_absolute_path(cfg.train.dataset_filename),
+        )
     if EProgramMode.Train in cfg.mode:
         logger.info(f"STAGE: Train")
-        start = time.time()
         main_train_model(cfg.train)
-        logger.info(f"STAGE: Train finished in {time.time() - start}")
     if EProgramMode.Predict in cfg.mode:
         # TODO: implement prediction
         pass
