@@ -24,7 +24,10 @@ from src.models.utils.train_classes import (
     make_one_epoch_runner,
 )
 from src.utils.dataset_utils import make_text_dataloader
+from src.utils.decorators import time_it
+
 logger = logging.getLogger(__file__)
+
 
 def train_cycle(
     model: nn.Module,
@@ -59,6 +62,7 @@ def train_cycle(
     return train_loss_hist, val_loss_hist
 
 
+@time_it("main_train_model, duration", logger.info)
 def main_train_model(args: TrainArgs):
     train_dataset, val_dataset, vocab = read_datasets(
         args.dataset_filename,

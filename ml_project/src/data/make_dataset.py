@@ -8,13 +8,13 @@ import pandas as pd
 
 # from dotenv import find_dotenv, load_dotenv
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset
 from torchtext.data import get_tokenizer
 from torchtext.vocab import Vocab
-from torchvision.transforms import Compose
 from src.constants.consts import *
 from src.data.text_dataset import MyTextDataset
+from src.utils.decorators import time_it
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +80,11 @@ def make_datasets(labels, texts, test_size, pretrained_vectors, tokenizer_name):
         vocab,
     )
 
-
+@time_it("prepare_data, duration", logger.info)
 @click.command()
 @click.argument("input_filepath", type=click.Path(exists=True))
 @click.argument("output_filepath", type=click.Path())
-def main(input_filepath, output_filepath):
+def prepare_data(input_filepath, output_filepath):
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
@@ -105,4 +105,4 @@ if __name__ == "__main__":
     # load up the .env entries as environment variables
     # load_dotenv(find_dotenv())
 
-    main()
+    prepare_data()
