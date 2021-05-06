@@ -20,7 +20,6 @@ from src.models.utils.helpers import (
     save_train_report,
 )
 from src.models.utils.train_classes import (
-    make_one_batch_runner,
     TrainOneEpoch,
     make_one_epoch_runner,
 )

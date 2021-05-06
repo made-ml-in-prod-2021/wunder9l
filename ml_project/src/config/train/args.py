@@ -1,12 +1,16 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List, Any
+
+from hydra.core.config_store import ConfigStore
 from omegaconf import MISSING
 
-from src.config.train.model import ModelArgs
+from src.config.train.model import ModelArgs, ModelRNNArgs
 from src.constants.enums import (
     ELossType,
     EOneBatchType,
     EOptimizerType,
     ELRSchedulerType,
+    EModelType,
 )
 
 
@@ -17,21 +21,36 @@ class LRSchedulerArgs:
     gamma: float = 0.1
 
 
+defaults = [
+    {"train/model": "rnn"},
+]
+
+
 @dataclass
 class TrainArgs:
+    defaults: List[Any] = field(default_factory=lambda: defaults)
     gpu: bool = True
-    dataset_filename: str = "data/processed/data.csv"
+    dataset_filename: str = "data/processed/spam.csv"
     test_size: float = 0.2
     tokenizer_name: str = "basic_english"
     pretrained_vectors: str = "glove.6B.100d"
     epochs: int = 40
     batch_size: int = 64
     model: ModelArgs = MISSING
-    loss_fn: ELossType = MISSING
+    loss_fn: ELossType = ELossType.ENLLLoss
     optimizer: EOptimizerType = EOptimizerType.Adam
     learning_rate: float = 1e-1
     one_batch_runner: EOneBatchType = EOneBatchType.Common
     dump_model: str = "models/model.dmp"
-    lr_scheduler: LRSchedulerArgs = MISSING
+    lr_scheduler: LRSchedulerArgs = LRSchedulerArgs()
     interactive: bool = False
-    report_path: str = "models/train_report.csv"
+    report_path: str = "reports/train_report.csv"
+
+
+def register_train_config() -> None:
+    cs = ConfigStore.instance()
+    cs.store(
+        group="train/model",
+        name="rnn",
+        node=ModelArgs(model_type=EModelType.RNN, model_args=ModelRNNArgs()),
+    )

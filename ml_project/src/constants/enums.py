@@ -24,3 +24,9 @@ class EOptimizerType(Enum):
 class ELRSchedulerType(Enum):
     No = 0
     Step = 1
+
+
+class EProgramMode(Enum):
+    PrepareData = 1
+    Train = 2
+    Predict = 3
