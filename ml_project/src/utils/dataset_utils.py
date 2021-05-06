@@ -52,7 +52,7 @@ def batch_sampler(dataset, batch_size, pool_per_batch=100):
 
     # yield indices for current batch
     for i in range(0, len(pooled_indices), batch_size):
-        yield pooled_indices[i : i + batch_size]
+        yield pooled_indices[i: i + batch_size]
 
 
 def make_text_dataloader(dataset: Dataset, batch_size: int, padding_value: float):

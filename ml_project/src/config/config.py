@@ -7,9 +7,9 @@ from src.config.train.args import TrainArgs, register_train_config
 from src.constants.enums import EProgramMode
 
 default_program_modes = [
-    EProgramMode.PrepareData,
+    # EProgramMode.PrepareData,
     EProgramMode.Train,
-    EProgramMode.Predict,
+    # EProgramMode.Predict,
 ]
 
 

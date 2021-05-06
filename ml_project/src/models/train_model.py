@@ -70,6 +70,7 @@ def main_train_model(args: TrainArgs):
         args.test_size,
         args.tokenizer_name,
         args.pretrained_vectors,
+        to_absolute_path(args.vectors_cache_directory)
     )
     train_dataloader = make_text_dataloader(
         train_dataset, args.batch_size, train_dataset.vocab[PAD]
@@ -78,14 +79,14 @@ def main_train_model(args: TrainArgs):
         train_dataset, args.batch_size, train_dataset.vocab[PAD]
     )
 
-    model = make_model(args.model)
+    model = make_model(args.model, vocab)
     loss_fn = make_loss_fn(args.loss_fn)
 
     optimizer = make_optimizer(args.optimizer, model, args.learning_rate)
     device = get_device(args.gpu)
 
     train_one_epoch = make_one_epoch_runner(
-        args.one_batch_runner,
+        args.model,
         model,
         loss_fn,
         train_dataloader,
@@ -94,7 +95,7 @@ def main_train_model(args: TrainArgs):
         is_train=True,
     )
     val_one_epoch = make_one_epoch_runner(
-        args.one_batch_runner,
+        args.model,
         model,
         loss_fn,
         val_dataloader,

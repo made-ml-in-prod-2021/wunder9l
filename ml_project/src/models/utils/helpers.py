@@ -3,10 +3,13 @@ from typing import List
 import pandas as pd
 import torch
 from torch import nn as nn
+from torchtext.vocab import Vocab
 
 from src.config.train.args import LRSchedulerArgs
-from src.config.train.model import ModelRNNArgs, ModelArgs
+from src.config.train.model import ModelArgs
+from src.constants.consts import PAD
 from src.constants.enums import ELossType, EModelType, EOptimizerType, ELRSchedulerType
+from src.models.adapted_models.rnn import make_rnn_model
 
 
 def plot_train_val_loss(train_loss_hist: List[float], val_loss_hist: List[float]):
@@ -37,17 +40,6 @@ def save_train_report(
     df.to_csv(path)
 
 
-def make_rnn_model(args: ModelRNNArgs) -> nn.Module:
-    rnn = nn.RNN(
-        input_size=args.input_size,
-        hidden_size=args.hidden_size,
-        num_layers=args.num_layers,
-        dropout=args.dropout,
-        bidirectional=args.bidirectional,
-    )
-    return rnn
-
-
 def make_loss_fn(loss_type: ELossType):
     MAP = {
         ELossType.ENLLLoss: nn.NLLLoss,
@@ -69,9 +61,9 @@ def get_device(gpu: bool) -> torch.device:
         return torch.device("cpu")
 
 
-def make_model(args: ModelArgs):
+def make_model(args: ModelArgs, vocab: Vocab):
     if args.model_type == EModelType.RNN:
-        return make_rnn_model(args.model_args)
+        return make_rnn_model(vocab.vectors, vocab[PAD], args.model_args)
     else:
         raise NotImplementedError(
             f"Required model {args.model_type} is not implemented"

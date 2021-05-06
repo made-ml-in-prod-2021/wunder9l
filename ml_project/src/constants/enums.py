@@ -15,6 +15,7 @@ class ELossType(Enum):
 
 class EOneBatchType(Enum):
     Common = 1
+    Rnn = 2
 
 
 class EOptimizerType(Enum):

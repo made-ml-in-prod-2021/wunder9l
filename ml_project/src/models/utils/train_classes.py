@@ -8,6 +8,7 @@ from torch import nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from src.config.train.model import ModelArgs
 from src.constants.consts import TARGET, DATA
 from src.constants.enums import EOneBatchType
 
@@ -28,7 +29,7 @@ class IOneBatchRunner:
 
 class CommonOneBatchRunner(IOneBatchRunner):
     def __init__(self, model: nn.Module, loss_fn: Callable, is_train: bool):
-        """Common train one preocedure (run model->get predicts->call loss function)"""
+        """Common train one batch procedure (run model->get predicts->call loss function)"""
         self.model = model
         self.loss_fn = loss_fn
         self.is_train = is_train
@@ -51,13 +52,75 @@ class CommonOneBatchRunner(IOneBatchRunner):
         return loss
 
 
+class RnnOneBatchRunner(IOneBatchRunner):
+    def __init__(
+        self,
+        model: nn.Module,
+        loss_fn: Callable,
+        min_sequence_to_loss: int,
+        is_train: bool,
+    ):
+        """Rnn-specific train one batch procedure.
+
+        Run model->get predicts and hidden state->call next step
+
+        Args:
+            model - rnn model
+
+            loss_fn - loss function
+
+            min_sequence_to_loss - minimal length of sequence to calculate loss function
+            (for train only). To make learning faster
+
+            is_train - training or validation
+        """
+        self.model = model
+        self.loss_fn = loss_fn
+        self.min_sequence_to_loss = min_sequence_to_loss
+        self.is_train = is_train
+
+    def __call__(self, data: torch.Tensor, target: torch.Tensor):
+        """Return loss from one batch. Run on every token from batch.
+
+         For example, if there are 10 tokens per sample in batch then it
+         would run for first token (with generated h0 as hidden state),
+         get it's output and hidden state h1, after that call it for second
+         token (with h1 as hidden state), get h2 etc...
+
+        Args:
+            data - input of model (batch_size x input_data)
+
+            target - output of model (batch_size x output_data)
+        """
+        self.model.train(self.is_train)
+
+        batch_size, max_length = data.shape
+        hid_state = torch.zeros((batch_size, self.model.hidden_state))
+        logprobs = []
+
+        for x_t in data.transpose(0, 1):
+            hid_state, logp_next = self.model(
+                x_t, hid_state
+            )  # <-- here we call your one-step code
+            logprobs.append(logp_next)
+
+        return torch.stack(logprobs, dim=1)
+
+
 def make_one_batch_runner(
-    runner_type: EOneBatchType, model: nn.Module, loss_fn: Callable, is_train: bool
+    model_args: ModelArgs, model: nn.Module, loss_fn: Callable, is_train: bool
 ):
-    if runner_type == EOneBatchType.Common:
+    if model_args.one_batch_runner == EOneBatchType.Common:
         return CommonOneBatchRunner(model, loss_fn, is_train)
+    elif model_args.one_batch_runner == EOneBatchType.Rnn:
+        return RnnOneBatchRunner(
+            model,
+            loss_fn,
+            min_sequence_to_loss=model_args.model_args.min_sequence_to_loss,
+            is_train=is_train,
+        )
     else:
-        raise NotImplementedError(f"No suitable IOneBatchRunner for {runner_type}")
+        raise NotImplementedError(f"No suitable IOneBatchRunner for {model_args}")
 
 
 class TrainOneEpoch(object):
@@ -95,7 +158,7 @@ class TrainOneEpoch(object):
 
 
 def make_one_epoch_runner(
-    one_batch_runner: EOneBatchType,
+    model_args: ModelArgs,
     model: nn.Module,
     loss_fn: Callable,
     train_dataloader: DataLoader,
@@ -103,7 +166,9 @@ def make_one_epoch_runner(
     device: torch.device,
     is_train: bool,
 ):
-    train_one_batch = make_one_batch_runner(one_batch_runner, model, loss_fn, is_train)
+    train_one_batch = make_one_batch_runner(
+        model_args, model, loss_fn, is_train
+    )
     train_one_epoch = TrainOneEpoch(
         train_dataloader, train_one_batch, optimizer, device, is_train
     )

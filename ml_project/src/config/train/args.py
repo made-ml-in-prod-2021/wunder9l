@@ -26,21 +26,25 @@ defaults = [
 ]
 
 
+def default_model_args() -> ModelArgs:
+    return ModelArgs(model_type=EModelType.RNN, model_args=ModelRNNArgs())
+
+
 @dataclass
 class TrainArgs:
     defaults: List[Any] = field(default_factory=lambda: defaults)
     gpu: bool = True
     dataset_filename: str = "data/processed/spam.csv"
+    vectors_cache_directory: str = ".vector_cache"
     test_size: float = 0.2
     tokenizer_name: str = "basic_english"
     pretrained_vectors: str = "glove.6B.100d"
     epochs: int = 40
     batch_size: int = 64
-    model: ModelArgs = MISSING
+    model: ModelArgs = default_model_args()
     loss_fn: ELossType = ELossType.ENLLLoss
     optimizer: EOptimizerType = EOptimizerType.Adam
     learning_rate: float = 1e-1
-    one_batch_runner: EOneBatchType = EOneBatchType.Common
     dump_model: str = "models/model.dmp"
     lr_scheduler: LRSchedulerArgs = LRSchedulerArgs()
     interactive: bool = False

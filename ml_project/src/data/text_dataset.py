@@ -1,11 +1,12 @@
 from torch.utils import data
+from torchtext.vocab import Vocab
 
 from src.constants.consts import START_OF_SEQUENCE, END_OF_SEQUENCE, DATA, TARGET
 from src.utils.dataset_utils import VocabTransform
 
 
 class MyTextDataset(data.Dataset):
-    def __init__(self, texts, labels, transforms, tokenizer, vocab):
+    def __init__(self, texts, labels, transforms, tokenizer, vocab: Vocab):
         self.texts = texts
         self.labels = labels
         self.transforms = transforms
