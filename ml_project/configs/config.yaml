@@ -1,8 +1,8 @@
 defaults:
-  - model@model: rnn
+  - model@train.model: rnn
 
 mode:
-- Train
+- EProgramMode.Train
 train:
   gpu: true
   dataset_filename: data/processed/spam.csv

@@ -20,6 +20,7 @@ logger = logging.getLogger(__file__)
 )
 def my_app(cfg: Config) -> None:
     print(OmegaConf.to_yaml(cfg))
+    temp = OmegaConf.structured(Config)
     working_dir = get_original_cwd()
     print(f"Orig working directory    : {working_dir}")
     print(f"Current working directory : {os.getcwd()}")
