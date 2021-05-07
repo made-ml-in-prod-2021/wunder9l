@@ -3,8 +3,8 @@ model_args:
   pretrained_vectors: glove.6B.50d
   input_size: 50
   hidden_size: 100
-  num_layers: 2
-  dropout: 0.1
+  num_layers: 1
+  dropout: 0
   bidirectional: false
   num_classes: 1
   min_sequence_to_loss: 10

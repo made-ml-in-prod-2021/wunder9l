@@ -7,7 +7,7 @@ from src.constants.enums import EModelType, EOneBatchType
 
 @dataclass
 class ModelRNNArgs:
-    pretrained_vectors: Optional[str] = MISSING
+    pretrained_vectors: Optional[str] = None
     input_size: int = 100
     hidden_size: int = 200
     num_layers: int = 2

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 import pandas as pd
+import torch
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -41,6 +42,10 @@ def save_to_output(data: pd.DataFrame, output_filepath: str) -> None:
     data.to_csv(output_filepath, index=False)
 
 
+def normal_tensor_like(like: torch.Tensor) -> torch.Tensor:
+    return torch.normal(mean=0.0, std=1.0, size=like.shape)
+
+
 def build_vocab(train_texts, tokenizer, pretrained_vectors: Optional[str], vector_cache_dir: Optional[str]):
     counter = Counter()
     for sample in train_texts:
@@ -51,6 +56,7 @@ def build_vocab(train_texts, tokenizer, pretrained_vectors: Optional[str], vecto
         vectors=pretrained_vectors,
         specials=[END_OF_LINE, PAD, UNKNOWN, START_OF_SEQUENCE, END_OF_SEQUENCE],
         vectors_cache=vector_cache_dir,
+        unk_init=normal_tensor_like
     )
     return vocabulary
 
