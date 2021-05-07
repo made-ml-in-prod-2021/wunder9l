@@ -3,6 +3,8 @@ from collections import Counter
 
 import logging
 from pathlib import Path
+from typing import Tuple
+
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
@@ -76,7 +78,7 @@ def make_datasets(
     pretrained_vectors: str,
     tokenizer_name: str,
     vector_cache_dir: str,
-):
+) -> Tuple[Dataset, Dataset, Vocab]:
     train_texts, test_texts, train_labels, test_labels = train_test_split(
         texts, labels, test_size=test_size, random_state=RANDOM_SEED, shuffle=True
     )

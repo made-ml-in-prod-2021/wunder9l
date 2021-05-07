@@ -1,0 +1,11 @@
+# @package _group_
+model_args:
+  input_size: 100
+  hidden_size: 200
+  num_layers: 2
+  dropout: 0.3
+  bidirectional: false
+  num_classes: 1
+  min_sequence_to_loss: 10
+model_type: RNN
+one_batch_runner: Rnn

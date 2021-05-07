@@ -26,5 +26,5 @@ class Config:
 
 
 cs = ConfigStore.instance()
-cs.store(name="config", node=Config)
+cs.store(name="base_config", node=Config)
 register_train_config()
