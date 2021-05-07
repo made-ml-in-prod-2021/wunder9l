@@ -38,7 +38,6 @@ class TrainArgs:
     vectors_cache_directory: str = ".vector_cache"
     test_size: float = 0.2
     tokenizer_name: str = "basic_english"
-    pretrained_vectors: str = "glove.6B.100d"
     epochs: int = 40
     batch_size: int = 64
     model: ModelArgs = default_model_args()

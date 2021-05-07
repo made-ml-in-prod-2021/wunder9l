@@ -1,5 +1,6 @@
 # @package _group_
 model_args:
+  pretrained_vectors: glove.6B.100d
   input_size: 100
   hidden_size: 200
   num_layers: 2

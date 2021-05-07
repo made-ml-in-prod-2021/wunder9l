@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 from omegaconf import MISSING
 
 from src.constants.enums import EModelType, EOneBatchType
@@ -7,6 +7,7 @@ from src.constants.enums import EModelType, EOneBatchType
 
 @dataclass
 class ModelRNNArgs:
+    pretrained_vectors: Optional[str] = MISSING
     input_size: int = 100
     hidden_size: int = 200
     num_layers: int = 2

@@ -9,7 +9,6 @@ train:
   vectors_cache_directory: .vector_cache
   test_size: 0.2
   tokenizer_name: basic_english
-  pretrained_vectors: glove.6B.100d
   epochs: 20
   batch_size: 64
   loss_fn: EBCEWithLogitsLoss

@@ -69,7 +69,7 @@ def main_train_model(args: TrainArgs):
         to_absolute_path(args.dataset_filename),
         args.test_size,
         args.tokenizer_name,
-        args.pretrained_vectors,
+        args.model.model_args.pretrained_vectors,
         to_absolute_path(args.vectors_cache_directory)
     )
     train_dataloader = make_text_dataloader(

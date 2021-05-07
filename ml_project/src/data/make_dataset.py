@@ -3,7 +3,7 @@ from collections import Counter
 
 import logging
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 import pandas as pd
 
@@ -41,7 +41,7 @@ def save_to_output(data: pd.DataFrame, output_filepath: str) -> None:
     data.to_csv(output_filepath, index=False)
 
 
-def build_vocab(train_texts, tokenizer, pretrained_vectors, vector_cache_dir: str):
+def build_vocab(train_texts, tokenizer, pretrained_vectors: Optional[str], vector_cache_dir: Optional[str]):
     counter = Counter()
     for sample in train_texts:
         counter.update(tokenizer(sample))
@@ -60,7 +60,7 @@ def read_datasets(
     test_size: float = 0.2,
     tokenizer_name: str = "basic_english",
     pretrained_vectors: str = "glove.6B.100d",
-    vector_cache_dir: str = ".vector_cache",
+    vector_cache_dir: Optional[str] = ".vector_cache",
 ) -> (Dataset, Dataset, Vocab):
     df = pd.read_csv(filename)
     labels = df.label.values
@@ -75,7 +75,7 @@ def make_datasets(
     labels,
     texts,
     test_size: float,
-    pretrained_vectors: str,
+    pretrained_vectors: Optional[str],
     tokenizer_name: str,
     vector_cache_dir: str,
 ) -> Tuple[Dataset, Dataset, Vocab]:
