@@ -42,7 +42,7 @@ class TrainArgs:
     epochs: int = 40
     batch_size: int = 64
     model: ModelArgs = default_model_args()
-    loss_fn: ELossType = ELossType.ENLLLoss
+    loss_fn: ELossType = ELossType.EBCEWithLogitsLoss
     optimizer: EOptimizerType = EOptimizerType.Adam
     learning_rate: float = 1e-1
     dump_model: str = "models/model.dmp"

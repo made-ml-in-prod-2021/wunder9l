@@ -43,6 +43,7 @@ def save_train_report(
 def make_loss_fn(loss_type: ELossType):
     MAP = {
         ELossType.ENLLLoss: nn.NLLLoss,
+        ELossType.EBCEWithLogitsLoss: nn.BCEWithLogitsLoss,
     }
     return MAP[loss_type]()
 

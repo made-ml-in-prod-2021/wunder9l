@@ -12,6 +12,7 @@ class ModelRNNArgs:
     num_layers: int = 2
     dropout: float = 0.3
     bidirectional: bool = False
+    num_classes: int = 1
     min_sequence_to_loss: int = 30
 
 

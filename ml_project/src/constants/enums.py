@@ -11,6 +11,7 @@ class EModelType(Enum):
 
 class ELossType(Enum):
     ENLLLoss = 1
+    EBCEWithLogitsLoss = 2
 
 
 class EOneBatchType(Enum):

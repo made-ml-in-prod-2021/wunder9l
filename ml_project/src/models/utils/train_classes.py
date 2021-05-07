@@ -92,19 +92,18 @@ class RnnOneBatchRunner(IOneBatchRunner):
 
             target - output of model (batch_size x output_data)
         """
+        seq_len, batch_size = data.shape
         self.model.train(self.is_train)
-
-        batch_size, max_length = data.shape
-        hid_state = torch.zeros((batch_size, self.model.hidden_state))
-        logprobs = []
-
-        for x_t in data.transpose(0, 1):
-            hid_state, logp_next = self.model(
-                x_t, hid_state
-            )  # <-- here we call your one-step code
-            logprobs.append(logp_next)
-
-        return torch.stack(logprobs, dim=1)
+        if self.is_train:
+            predictions, hidden_state = self.model(data, None)
+        else:
+            with torch.no_grad():
+                predictions, hidden_state = self.model(data, None)
+        min_sequence_to_loss = min(self.min_sequence_to_loss, seq_len - 1)
+        to_loss = predictions[min_sequence_to_loss:].cpu()
+        target = target.repeat(to_loss.shape[0], 1).reshape(to_loss.shape).to(dtype=to_loss.dtype)
+        loss = self.loss_fn(to_loss, target)
+        return loss
 
 
 def make_one_batch_runner(
@@ -140,8 +139,9 @@ class TrainOneEpoch(object):
 
     def __call__(self) -> np.ndarray:
         loss_hist = []
+        desc = "training..." if self.is_train else "validating..."
         for batch in tqdm(
-            self.dataloader, total=len(self.dataloader), desc="training..."
+            self.dataloader, total=len(self.dataloader), desc=desc
         ):
             data = batch[DATA].to(self.device)
             target = batch[TARGET].to(self.device)

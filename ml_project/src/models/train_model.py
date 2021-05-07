@@ -24,7 +24,7 @@ from src.models.utils.train_classes import (
     TrainOneEpoch,
     make_one_epoch_runner,
 )
-from src.utils.dataset_utils import make_text_dataloader
+from src.utils.dataset_utils import make_text_dataloader, ensure_path
 from src.utils.decorators import time_it
 
 logger = logging.getLogger(__file__)
@@ -111,8 +111,8 @@ def main_train_model(args: TrainArgs):
         train_one_epoch,
         val_one_epoch,
         args.epochs,
-        args.dump_model,
+        ensure_path(args.dump_model),
         lr_scheduler,
         plot_fn,
     )
-    save_train_report(train_score_hist, val_score_hist, args.report_path)
+    save_train_report(train_score_hist, val_score_hist, ensure_path(args.report_path))
