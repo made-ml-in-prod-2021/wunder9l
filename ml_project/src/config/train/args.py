@@ -34,10 +34,7 @@ def default_model_args() -> ModelArgs:
 class TrainArgs:
     defaults: List[Any] = field(default_factory=lambda: defaults)
     gpu: bool = True
-    dataset_filename: str = "data/processed/spam.csv"
-    vectors_cache_directory: str = ".vector_cache"
     test_size: float = 0.2
-    tokenizer_name: str = "basic_english"
     epochs: int = 40
     batch_size: int = 64
     model: ModelArgs = default_model_args()

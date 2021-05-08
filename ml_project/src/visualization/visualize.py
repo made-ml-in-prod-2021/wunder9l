@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.data.make_dataset import load_raw_csv
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -40,7 +42,7 @@ def describe_train_process(train_csv: str, model_path: str):
 
 
 def investigate_dataset(original_dataset: str):
-    df = pd.read_csv(original_dataset)
+    df = load_raw_csv(original_dataset)
     st.header("Original dataset insights")
     st.subheader("Samples of dataset")
     st.write(df.head(20))

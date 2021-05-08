@@ -1,3 +1,7 @@
+from typing import Tuple
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
 from torch.utils import data
 from torchtext.vocab import Vocab
 
@@ -24,3 +28,29 @@ class MyTextDataset(data.Dataset):
 
     def __len__(self):
         return len(self.labels)
+
+    def compacted_repr(self):
+        tokens = [self[idx][DATA] for idx in range(len(self))]
+        return TokenizedDataset(tokens, self.labels)
+
+
+class TokenizedDataset(data.Dataset):
+    def __init__(self, tokens, labels):
+        self.tokens = tokens
+        self.labels = labels
+
+    def __getitem__(self, idx):
+        return {DATA: self.tokens[idx], TARGET: self.labels[idx]}
+
+    def __len__(self):
+        return len(self.labels)
+
+    def train_test_split(self, test_size: float, seed: int = 42) -> Tuple:
+        """Splits dataset to train/test"""
+        train_tokens, test_tokens, train_labels, test_labels = train_test_split(
+            self.tokens, self.labels, test_size=test_size, random_state=seed
+        )
+        return (
+            TokenizedDataset(train_tokens, train_labels),
+            TokenizedDataset(test_tokens, test_labels),
+        )

@@ -7,11 +7,12 @@ from hydra.utils import get_original_cwd, to_absolute_path
 from omegaconf import OmegaConf
 
 from src.config.config import Config
+from src.constants.consts import APP_NAME
 from src.constants.enums import EProgramMode
 from src.data.make_dataset import prepare_data
 from src.models.train_model import main_train_model
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(APP_NAME)
 
 
 @hydra.main(
@@ -27,12 +28,14 @@ def my_app(cfg: Config) -> None:
     if EProgramMode.PrepareData in cfg.mode:
         logger.info(f"STAGE: PrepareData")
         prepare_data(
-            to_absolute_path(cfg.prepare_data.input_file),
-            to_absolute_path(cfg.train.dataset_filename),
+            cfg.prepare_data,
+            to_absolute_path(cfg.train_dataset),
+            to_absolute_path(cfg.test_dataset),
+            to_absolute_path(cfg.vocab_path),
         )
     if EProgramMode.Train in cfg.mode:
         logger.info(f"STAGE: Train")
-        main_train_model(cfg.train)
+        main_train_model(cfg)
     if EProgramMode.Predict in cfg.mode:
         # TODO: implement prediction
         pass

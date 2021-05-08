@@ -1,16 +1,15 @@
 import logging
 from collections import Callable
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Dict
 
 import numpy as np
 import torch
 import torch.nn as nn
 from hydra.utils import to_absolute_path
 
-from src.config.train.args import TrainArgs
-from src.constants.consts import PAD
-from src.data.make_dataset import read_datasets
-
+from src.config.config import Config
+from src.constants.consts import PAD, APP_NAME
+from src.data.make_dataset import load_processed_dataset
 from src.models.utils.helpers import (
     make_loss_fn,
     get_device,
@@ -31,7 +30,7 @@ from src.models.utils.train_classes import (
 from src.utils.dataset_utils import make_text_dataloader, ensure_path
 from src.utils.decorators import time_it
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(APP_NAME)
 
 
 def to_column_view(results: List[Dict[str, float]], prefix) -> Dict[str, List[float]]:
@@ -84,19 +83,16 @@ def train_cycle(
 
 
 @time_it("main_train_model, duration", logger.info)
-def main_train_model(args: TrainArgs):
-    train_dataset, val_dataset, vocab = read_datasets(
-        to_absolute_path(args.dataset_filename),
-        args.test_size,
-        args.tokenizer_name,
-        args.model.model_args.pretrained_vectors,
-        to_absolute_path(args.vectors_cache_directory),
-    )
+def main_train_model(cfg: Config):
+    ds = load_processed_dataset(to_absolute_path(cfg.train_dataset))
+    vocab = torch.load(to_absolute_path(cfg.vocab_path))
+    args = cfg.train
+    train_dataset, val_dataset = ds.train_test_split(args.test_size)
     train_dataloader = make_text_dataloader(
-        train_dataset, args.batch_size, train_dataset.vocab[PAD]
+        train_dataset, args.batch_size, vocab[PAD]
     )
     val_dataloader = make_text_dataloader(
-        train_dataset, args.batch_size, train_dataset.vocab[PAD]
+        train_dataset, args.batch_size, vocab[PAD]
     )
 
     model = make_model(args.model, vocab)
@@ -144,5 +140,5 @@ def main_train_model(args: TrainArgs):
     )
     save_train_report(results, ensure_path(args.report_path))
     run_visualization(
-        to_absolute_path(args.dataset_filename), args.report_path, args.dump_model
+        to_absolute_path(cfg.prepare_data.train_file), args.report_path, args.dump_model
     )

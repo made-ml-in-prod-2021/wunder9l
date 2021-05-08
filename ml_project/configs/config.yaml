@@ -2,13 +2,11 @@ defaults:
   - model@train.model: rnn
 
 mode:
-- EProgramMode.Train
+- PrepareData
+- Train
 train:
   gpu: true
-  dataset_filename: data/processed/spam.csv
-  vectors_cache_directory: .vector_cache
   test_size: 0.25
-  tokenizer_name: basic_english
   epochs: 100
   batch_size: 64
   loss_fn: EBCEWithLogitsLoss
@@ -21,5 +19,12 @@ train:
     gamma: 0.5
   interactive: false
   report_path: reports/train_report.csv
+train_dataset: data/processed/train_data.pkl
+test_dataset: data/processed/test_data.pkl
+vocab_path: data/processed/vocab.pkl
 prepare_data:
-  input_file: data/raw/spam.csv
+  train_file: data/raw/spam.csv
+  test_file: data/raw/test_data.csv
+  tokenizer_name: basic_english
+  pretrained_vectors: glove.6B.100d
+  vectors_cache_directory: .vector_cache

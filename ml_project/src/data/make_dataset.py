@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
+import pickle
 from collections import Counter
 
 import logging
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, List
 
 import pandas as pd
 import torch
+from hydra.utils import to_absolute_path
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset
 from torchtext.data import get_tokenizer
 from torchtext.vocab import Vocab
+
+from src.config.config import PrepareDataArgs
 from src.constants.consts import *
-from src.data.text_dataset import MyTextDataset
+from src.data.text_dataset import MyTextDataset, TokenizedDataset
 from src.utils.decorators import time_it
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(APP_NAME)
 
 
 def load_raw_csv(filename: str) -> pd.DataFrame:
@@ -38,15 +42,29 @@ def clear_raw_dataset(dataset: pd.DataFrame) -> pd.DataFrame:
     return dataset[["label", "text"]]
 
 
-def save_to_output(data: pd.DataFrame, output_filepath: str) -> None:
-    data.to_csv(output_filepath, index=False)
+def save_dataset(ds: MyTextDataset, output_filepath: str) -> None:
+    with open(output_filepath, "wb") as out:
+        pickle.dump(ds.compacted_repr(), out)
+    logger.info(f"Raw data processed to {output_filepath}")
+
+
+def load_processed_dataset(filepath: str) -> TokenizedDataset:
+    with open(filepath, "rb") as inp:
+        ds = pickle.load(inp)
+    logger.info(f"Tokenized dataset loaded from {filepath}")
+    return ds
 
 
 def normal_tensor_like(like: torch.Tensor) -> torch.Tensor:
     return torch.normal(mean=0.0, std=1.0, size=like.shape)
 
 
-def build_vocab(train_texts, tokenizer, pretrained_vectors: Optional[str], vector_cache_dir: Optional[str]):
+def build_vocab(
+    train_texts,
+    tokenizer,
+    pretrained_vectors: Optional[str],
+    vector_cache_dir: Optional[str],
+):
     counter = Counter()
     for sample in train_texts:
         counter.update(tokenizer(sample))
@@ -56,7 +74,7 @@ def build_vocab(train_texts, tokenizer, pretrained_vectors: Optional[str], vecto
         vectors=pretrained_vectors,
         specials=[END_OF_LINE, PAD, UNKNOWN, START_OF_SEQUENCE, END_OF_SEQUENCE],
         vectors_cache=vector_cache_dir,
-        unk_init=normal_tensor_like
+        unk_init=normal_tensor_like,
     )
     return vocabulary
 
@@ -98,15 +116,46 @@ def make_datasets(
     )
 
 
+def make_dataset(
+    df: pd.DataFrame, label_encoder: LabelEncoder, transforms, tokenizer, vocab
+) -> MyTextDataset:
+    labels = label_encoder.transform(df.label.values)
+    texts = df.text.values
+    ds = MyTextDataset(texts, labels, transforms, tokenizer, vocab)
+    return ds
+
+
 @time_it("prepare_data, duration", logger.info)
-def prepare_data(input_filepath, output_filepath):
+def prepare_data(args: PrepareDataArgs, train_output, test_output, vocab_output):
     """Runs data processing scripts to turn raw data from (../raw) into
     cleaned data ready to be analyzed (saved in ../processed).
     """
     logger.info("Processing raw data to final data set")
-    loaded = load_raw_csv(input_filepath)
-    save_to_output(loaded, output_filepath)
-    logger.info(f"Raw data processed from {input_filepath} to {output_filepath}")
+    train_df = load_raw_csv(to_absolute_path(args.train_file))
+    test_df = load_raw_csv(to_absolute_path(args.test_file))
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(train_df.label.values)
+
+    tokenizer = get_tokenizer(args.tokenizer_name)
+    vocab = build_vocab(
+        train_df.text.values,
+        tokenizer,
+        args.pretrained_vectors,
+        to_absolute_path(args.vectors_cache_directory),
+    )
+    logger.info(f"Save vocab into {vocab_output}")
+    torch.save(vocab, vocab_output)
+
+    train_ds = make_dataset(
+        train_df, label_encoder, transforms=None, tokenizer=tokenizer, vocab=vocab
+    )
+    save_dataset(train_ds, train_output)
+
+    test_ds = make_dataset(
+        test_df, label_encoder, transforms=None, tokenizer=tokenizer, vocab=vocab
+    )
+    save_dataset(test_ds, test_output)
 
 
 if __name__ == "__main__":
