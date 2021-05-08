@@ -7,18 +7,18 @@ train:
   gpu: true
   dataset_filename: data/processed/spam.csv
   vectors_cache_directory: .vector_cache
-  test_size: 0.2
+  test_size: 0.25
   tokenizer_name: basic_english
-  epochs: 10
+  epochs: 100
   batch_size: 64
   loss_fn: EBCEWithLogitsLoss
-  optimizer: Adam
+  optimizer: SGD
   learning_rate: 0.1
   dump_model: models/model.dmp
   lr_scheduler:
     type: 'No'
-    step_size: 3
-    gamma: 0.1
+    step_size: 10
+    gamma: 0.5
   interactive: false
   report_path: reports/train_report.csv
 prepare_data:
