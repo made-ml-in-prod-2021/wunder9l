@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
 import torch
+from sklearn.metrics import accuracy_score, recall_score, precision_score
 from torch import nn as nn
 from torchtext.vocab import Vocab
 
@@ -27,17 +28,10 @@ def plot_train_val_loss(train_loss_hist: List[float], val_loss_hist: List[float]
     plt.show()
 
 
-def save_train_report(
-    train_score_hist: List[float], val_score_hist: List[float], path: str
-):
-    df = pd.DataFrame(
-        dict(
-            epoch=range(1, len(train_score_hist) + 1),
-            train_loss=train_score_hist,
-            val_loss=val_score_hist,
-        )
-    )
-    df.to_csv(path)
+def save_train_report(results: Dict[str, List[float]], path: str):
+    results["epoch"] = list(range(1, max(len(items) for items in results.values()) + 1))
+    df = pd.DataFrame(results)
+    df.to_csv(path, index=False)
 
 
 def make_loss_fn(loss_type: ELossType):
@@ -78,3 +72,26 @@ def make_lr_scheduler(optimizer: torch.optim.Optimizer, args: LRSchedulerArgs):
         )
     else:
         return None
+
+
+def from_raw_to_labels(y_pred: torch.Tensor):
+    """Returns labels (1.0 or 0.0) from raw regression values (-inf, inf)"""
+    return torch.round(torch.sigmoid(y_pred))
+
+
+def accuracy_from_predictions(y_true: torch.Tensor, y_pred: torch.Tensor):
+    y_pred_rounded = from_raw_to_labels(y_pred)
+    score = accuracy_score(y_true, y_pred_rounded)
+    return score
+
+
+def precision_from_predictions(y_true: torch.Tensor, y_pred: torch.Tensor):
+    y_pred_rounded = from_raw_to_labels(y_pred)
+    score = precision_score(y_true, y_pred_rounded)
+    return score
+
+
+def recall_from_predictions(y_true: torch.Tensor, y_pred: torch.Tensor):
+    y_pred_rounded = from_raw_to_labels(y_pred)
+    score = recall_score(y_true, y_pred_rounded)
+    return score

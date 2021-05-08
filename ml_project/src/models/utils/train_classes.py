@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections import Callable
-from typing import Optional
+from typing import Optional, Tuple, Dict, List
 
 import numpy as np
 import torch
@@ -49,7 +49,7 @@ class CommonOneBatchRunner(IOneBatchRunner):
             with torch.no_grad():
                 predictions = self.model(data).cpu()
         loss = self.loss_fn(predictions, target)
-        return loss
+        return loss, predictions
 
 
 class RnnOneBatchRunner(IOneBatchRunner):
@@ -101,9 +101,13 @@ class RnnOneBatchRunner(IOneBatchRunner):
                 predictions, hidden_state = self.model(data, None)
         min_sequence_to_loss = min(self.min_sequence_to_loss, seq_len - 1)
         to_loss = predictions[min_sequence_to_loss:].cpu()
-        target = target.repeat(to_loss.shape[0], 1).reshape(to_loss.shape).to(dtype=to_loss.dtype)
+        target = (
+            target.repeat(to_loss.shape[0], 1)
+            .reshape(to_loss.shape)
+            .to(dtype=to_loss.dtype)
+        )
         loss = self.loss_fn(to_loss, target)
-        return loss
+        return loss, predictions[-1].detach().cpu()
 
 
 def make_one_batch_runner(
@@ -122,7 +126,7 @@ def make_one_batch_runner(
         raise NotImplementedError(f"No suitable IOneBatchRunner for {model_args}")
 
 
-class TrainOneEpoch(object):
+class OneEpochRunner(object):
     def __init__(
         self,
         dataloader: DataLoader,
@@ -130,31 +134,50 @@ class TrainOneEpoch(object):
         optimizer: Optional[torch.optim.Optimizer],
         device: torch.device,
         is_train: bool,
+        score_functions: Optional[
+            Dict[str, Callable[[torch.Tensor, torch.Tensor], float]]
+        ],
     ):
         self.dataloader = dataloader
         self.one_batch_train = one_batch_train
         self.optimizer = optimizer
         self.device = device
         self.is_train = is_train
+        self.score_functions = score_functions
 
-    def __call__(self) -> np.ndarray:
+    def __call__(self) -> Tuple[np.ndarray, Dict[str, float]]:
         loss_hist = []
+        target_hist, prediction_hist = [], []
         desc = "training..." if self.is_train else "validating..."
-        for batch in tqdm(
-            self.dataloader, total=len(self.dataloader), desc=desc
-        ):
+        for batch in tqdm(self.dataloader, total=len(self.dataloader), desc=desc):
             data = batch[DATA].to(self.device)
             target = batch[TARGET].to(self.device)
 
-            loss = self.one_batch_train(data, target)
+            loss, batch_predictions = self.one_batch_train(data, target)
             loss_hist.append(loss.item())
+            if self.score_functions:
+                target_hist.append(target)
+                prediction_hist.append(batch_predictions)
 
             if self.optimizer and self.is_train:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+        score = self._call_score_functions(target_hist, prediction_hist)
+        return np.mean(loss_hist), score
 
-        return np.mean(loss_hist)
+    def _call_score_functions(
+        self, target_hist: List[torch.Tensor], prediction_hist: List[torch.Tensor]
+    ) -> Dict[str, float]:
+        if not self.score_functions:
+            return {}
+        target_hist = torch.cat(target_hist, dim=0)
+        prediction_hist = torch.cat(prediction_hist, dim=0)
+        score = {
+            name: fn(target_hist, prediction_hist)
+            for name, fn in self.score_functions.items()
+        }
+        return score
 
 
 def make_one_epoch_runner(
@@ -165,11 +188,12 @@ def make_one_epoch_runner(
     optimizer: Optional[torch.optim.Optimizer],
     device: torch.device,
     is_train: bool,
+    score_functions: Optional[
+        Dict[str, Callable[[torch.Tensor, torch.Tensor], float]]
+    ] = None,
 ):
-    train_one_batch = make_one_batch_runner(
-        model_args, model, loss_fn, is_train
-    )
-    train_one_epoch = TrainOneEpoch(
-        train_dataloader, train_one_batch, optimizer, device, is_train
+    train_one_batch = make_one_batch_runner(model_args, model, loss_fn, is_train)
+    train_one_epoch = OneEpochRunner(
+        train_dataloader, train_one_batch, optimizer, device, is_train, score_functions
     )
     return train_one_epoch
