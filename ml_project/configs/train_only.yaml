@@ -1,26 +1,32 @@
-defaults:
-  - model@train.model: rnn
-
 mode:
-- PrepareData
 - Train
-- Predict
-- Visualize
 train:
   gpu: true
-  test_size: 0.25
-  epochs: 100
-  batch_size: 64
+  test_size: 0.2
+  epochs: 40
+  batch_size: 128
   loss_fn: EBCEWithLogitsLoss
   optimizer: SGD
-  learning_rate: 0.1
+  learning_rate: 0.01
   dump_model: models/model.dmp
   lr_scheduler:
     type: 'No'
     step_size: 10
-    gamma: 0.5
+    gamma: 0.1
   interactive: false
   report_path: reports/train_report.csv
+  model:
+    model_args:
+      pretrained_vectors: glove.6B.50d
+      input_size: 50
+      hidden_size: 100
+      num_layers: 1
+      dropout: 0
+      bidirectional: false
+      num_classes: 1
+      min_sequence_to_loss: 5
+    model_type: RNN
+    one_batch_runner: Rnn
 train_dataset: data/processed/train_data.pkl
 test_dataset: data/processed/test_data.pkl
 vocab_path: data/processed/vocab.pkl
@@ -30,5 +36,3 @@ prepare_data:
   tokenizer_name: basic_english
   pretrained_vectors: glove.6B.100d
   vectors_cache_directory: .vector_cache
-predict:
-  result_file: reports/prediction.csv

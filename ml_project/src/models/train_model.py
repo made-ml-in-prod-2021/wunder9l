@@ -139,6 +139,3 @@ def main_train_model(cfg: Config):
         plot_fn,
     )
     save_train_report(results, ensure_path(args.report_path))
-    run_visualization(
-        to_absolute_path(cfg.prepare_data.train_file), args.report_path, args.dump_model
-    )

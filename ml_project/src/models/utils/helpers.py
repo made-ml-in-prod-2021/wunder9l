@@ -79,13 +79,21 @@ def get_device(gpu: bool) -> torch.device:
         return torch.device("cpu")
 
 
-def make_model(args: ModelArgs, vocab: Vocab):
+def make_model(args: ModelArgs, vocab: Vocab) -> nn.Module:
     if args.model_type == EModelType.RNN:
         return make_rnn_model(vocab.vectors, vocab[PAD], args.model_args)
     else:
         raise NotImplementedError(
             f"Required model {args.model_type} is not implemented"
         )
+
+
+def load_model(args: ModelArgs, vocab: Vocab, dump_file: str) -> nn.Module:
+    model = make_model(args, vocab)
+    with open(dump_file, "rb") as fp:
+        state_dict = torch.load(fp)
+        model.load_state_dict(state_dict)
+    return model
 
 
 def make_lr_scheduler(optimizer: torch.optim.Optimizer, args: LRSchedulerArgs):

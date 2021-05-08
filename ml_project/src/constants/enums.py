@@ -33,3 +33,4 @@ class EProgramMode(Enum):
     PrepareData = 1
     Train = 2
     Predict = 3
+    Visualize = 4
