@@ -21,6 +21,7 @@ class EOneBatchType(Enum):
 
 class EOptimizerType(Enum):
     Adam = 1
+    SGD = 2
 
 
 class ELRSchedulerType(Enum):

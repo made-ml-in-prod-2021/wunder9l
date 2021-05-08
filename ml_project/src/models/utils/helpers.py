@@ -1,14 +1,17 @@
+import logging
+from subprocess import Popen
 from typing import List, Dict
 
 import pandas as pd
 import torch
+from hydra.utils import to_absolute_path
 from sklearn.metrics import accuracy_score, recall_score, precision_score
 from torch import nn as nn
 from torchtext.vocab import Vocab
 
 from src.config.train.args import LRSchedulerArgs
 from src.config.train.model import ModelArgs
-from src.constants.consts import PAD
+from src.constants.consts import PAD, APP_NAME
 from src.constants.enums import ELossType, EModelType, EOptimizerType, ELRSchedulerType
 from src.models.adapted_models.rnn import make_rnn_model
 
@@ -34,6 +37,23 @@ def save_train_report(results: Dict[str, List[float]], path: str):
     df.to_csv(path, index=False)
 
 
+def run_visualization(original_dataset: str, train_result: str, model_path: str) -> None:
+    cmd = [
+        "streamlit",
+        "run",
+        to_absolute_path("src/visualization/visualize.py"),
+        "--",
+        "--original_dataset",
+        original_dataset,
+        "--train_result",
+        train_result,
+        "--model",
+        model_path,
+    ]
+    logging.getLogger(APP_NAME).info(f"Visualization, running cmd: {cmd}")
+    Popen(cmd).wait()
+
+
 def make_loss_fn(loss_type: ELossType):
     MAP = {
         ELossType.ENLLLoss: nn.NLLLoss,
@@ -45,7 +65,10 @@ def make_loss_fn(loss_type: ELossType):
 def make_optimizer(
     optimizer_type: EOptimizerType, model: nn.Module, learning_rate: float
 ):
-    MAP = {EOptimizerType.Adam: torch.optim.Adam}
+    MAP = {
+        EOptimizerType.Adam: torch.optim.Adam,
+        EOptimizerType.SGD: torch.optim.SGD,
+    }
     return MAP[optimizer_type](model.parameters(), lr=learning_rate)
 
 

@@ -22,6 +22,7 @@ from src.models.utils.helpers import (
     accuracy_from_predictions,
     recall_from_predictions,
     precision_from_predictions,
+    run_visualization,
 )
 from src.models.utils.train_classes import (
     OneEpochRunner,
@@ -36,6 +37,7 @@ logger = logging.getLogger(__file__)
 def to_column_view(results: List[Dict[str, float]], prefix) -> Dict[str, List[float]]:
     def get_column(key):
         return [item[key] for item in results]
+
     keys = {k for item in results for k in item}
     out = {prefix + key: get_column(key) for key in keys}
     return out
@@ -141,3 +143,6 @@ def main_train_model(args: TrainArgs):
         plot_fn,
     )
     save_train_report(results, ensure_path(args.report_path))
+    run_visualization(
+        to_absolute_path(args.dataset_filename), args.report_path, args.dump_model
+    )

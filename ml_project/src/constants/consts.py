@@ -8,3 +8,5 @@ RANDOM_SEED = 42
 
 TARGET = "target"
 DATA = "data"
+
+APP_NAME = "ml_project"
