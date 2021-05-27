@@ -1,0 +1,34 @@
+defaults:
+  - model@train.model: rnn
+
+mode:
+- PrepareData
+- Train
+- Predict
+- Visualize
+train:
+  gpu: true
+  test_size: 0.25
+  epochs: 100
+  batch_size: 64
+  loss_fn: EBCEWithLogitsLoss
+  optimizer: SGD
+  learning_rate: 0.1
+  dump_model: models/model.dmp
+  lr_scheduler:
+    type: 'No'
+    step_size: 10
+    gamma: 0.5
+  interactive: false
+  report_path: reports/train_report.csv
+train_dataset: data/processed/train_data.pkl
+test_dataset: data/processed/test_data.pkl
+vocab_path: data/processed/vocab.pkl
+prepare_data:
+  train_file: data/raw/spam.csv
+  test_file: data/raw/test_data.csv
+  tokenizer_name: basic_english
+  pretrained_vectors: glove.6B.100d
+  vectors_cache_directory: .vector_cache
+predict:
+  result_file: reports/prediction.csv
